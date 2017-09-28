@@ -1,4 +1,4 @@
-﻿using Shell32;
+using Shell32;
 using System;
 using System.IO;
 
@@ -40,7 +40,7 @@ namespace RecycleBinCleaner
                             Console.WriteLine("Item - Name: {0}\nPath: {1}\nIsFolder:{2}\n\n", fileName, path, isFolder);
                             if (isFolder)
                             {
-                                if (path.EndsWith(".zip"))
+                                if (path.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
                                 {
                                     File.Delete(path);
                                     continue;
@@ -48,10 +48,10 @@ namespace RecycleBinCleaner
                                 var tempPath = path[0] + @":\RecycleBinCleaner";
                                 if (Directory.Exists(tempPath))
                                 {
-                                    Directory.Delete(tempPath, true);
+                                    DeleteFilesAndSubfolders(tempPath);
                                 }
                                 Directory.Move(path, tempPath);
-                                Directory.Delete(tempPath, true);
+                                DeleteFilesAndSubfolders(tempPath);
                             }
                             else
                             {
@@ -66,12 +66,28 @@ namespace RecycleBinCleaner
                     Console.WriteLine(exception);
                     Console.WriteLine();
                     exceptionOccured = true;
+
+                    Console.ReadLine();
                 }
             }
             if (exceptionOccured)
             {
                 Console.ReadLine();
             }
+        }
+
+        private static void DeleteFilesAndSubfolders(string tempPath)
+        {
+            foreach (var item in Directory.GetDirectories(tempPath))
+            {
+                DeleteFilesAndSubfolders(item);
+            }
+            foreach (var item in Directory.GetFiles(tempPath))
+            {
+                File.SetAttributes(item, FileAttributes.Normal);
+                File.Delete(item);
+            }
+            Directory.Delete(tempPath, true);
         }
     }
 }
